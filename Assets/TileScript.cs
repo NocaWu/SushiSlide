@@ -7,7 +7,7 @@ public class TileScript : MonoBehaviour {
     private static TileScript prevSelected = null;
     private SpriteRenderer rend;
     private bool isSelected;
-    private Color selectedColor = new Vector4(0.5f,0.5f,0.5f,0.5f);
+    private Color selectedColor = new Vector4(1f,1f,1f,0.5f);
 
 	void Start()
 	{
@@ -42,63 +42,63 @@ public class TileScript : MonoBehaviour {
                } 
                else
                {
-                   //Swap(prevSelected.rend);
-                   SwapObject(prevSelected.gameObject);
-                   prevSelected.Deselect();
+                    GridManagerScript.instance.isMoving = true;
+                    Vector3 tempSelf = transform.position;
+                    Vector3 tempPrev = prevSelected.gameObject.transform.position;
+                    SwapObject(transform.position,prevSelected.gameObject.transform.position, prevSelected.gameObject);
+
+                    if(hasMatch())
+                    {
+                        // clear matches
+                    }
+                    else
+                    {
+                        SwapObject(transform.position, tempSelf, prevSelected.gameObject);
+                    }
+
+                    GridManagerScript.instance.isMoving = false;
+
+                    prevSelected.Deselect();
                }
            }
     }
-
-
-    void Swap(SpriteRenderer prev)
+    IEnumerator Wait()
     {
-        float xDis = transform.position.x - prev.gameObject.transform.position.x;
-        float yDis = transform.position.y - prev.gameObject.transform.position.y;
-
-        SpriteRenderer self = gameObject.GetComponent<SpriteRenderer>();
-
-        Sprite temp;
-
-        if (Mathf.Abs(xDis) < 1.1f && Mathf.Abs(yDis) < 1.1f && prev.sprite != self.sprite)
-        {
-            temp = prev.sprite;
-            prev.sprite = self.sprite;
-            self.sprite = temp;
-        }
+        yield return new WaitForSeconds(1);
     }
 
-    void SwapObject(GameObject prev)
+    // swap selected tiles
+    void SwapObject(Vector3 currentPos, Vector3 targetPos, GameObject prev)
     {
         Sprite prevSprite = prev.GetComponent<SpriteRenderer>().sprite;
         Sprite selfSprite = GetComponent<SpriteRenderer>().sprite;
        
-        Vector3 tempPos;
-
         float xDis = transform.position.x - prev.transform.position.x;
         float yDis = transform.position.y - prev.transform.position.y;
 
         if (Mathf.Abs(xDis) < 1.1f && Mathf.Abs(yDis) < 1.1f && prevSprite != selfSprite)
         {
-            //tempPos = prev.transform.position;
-            //prev.transform.position = transform.position;
-            //transform.position = tempPos;
-            StartCoroutine(SmoothSwap(prev));
+            StartCoroutine(SmoothSwap(currentPos, targetPos, prev));
         }
     }
 
-    IEnumerator SmoothSwap(GameObject prev)
+    // visual smoothing swaping
+    IEnumerator SmoothSwap(Vector3 currentPos, Vector3 targetPos, GameObject prev)
     {
-        GridManagerScript.instance.isMoving = true;
-        Vector3 tempPrev = prev.transform.position;
-        Vector3 tempSelf = transform.position;
-
-        for (float f = 0f; f <= 1; f += 0.1f)
+        for (float t = 0f; t <= 1; t += 0.1f)
         {
-            prev.transform.position = Vector3.Lerp(prev.transform.position, tempSelf,f*f);
-            transform.position = Vector3.Lerp(transform.position,tempPrev,f*f);
+            float lerpAmount = Mathf.SmoothStep(0,1,t);
+            prev.transform.position = Vector3.Lerp(prev.transform.position, currentPos,lerpAmount);
+            transform.position = Vector3.Lerp(transform.position,targetPos,lerpAmount);
             yield return null;
         }
 
-        GridManagerScript.instance.isMoving = false;
+        prev.transform.position = currentPos;
+        transform.position = targetPos;
+    }
+
+    private bool hasMatch()
+    {
+        return false;
     }
 }

@@ -7,7 +7,7 @@ public class GridManagerScript : MonoBehaviour {
     public static GridManagerScript instance;
 
     public GameObject tilePrefab;
-    private GameObject[,] tile= new GameObject[5,5]; // the whole grid(5*5) tiles as an array
+    public GameObject[,] tile= new GameObject[5,5]; // the whole grid(5*5) tiles as an array
 
     public Sprite[] tileSprite;
 
