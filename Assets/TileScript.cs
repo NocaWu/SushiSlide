@@ -42,34 +42,17 @@ public class TileScript : MonoBehaviour {
                } 
                else
                {
-                    GridManagerScript.instance.isMoving = true;
-                    Vector3 tempSelf = transform.position;
-                    Vector3 tempPrev = prevSelected.gameObject.transform.position;
                     SwapObject(transform.position,prevSelected.gameObject.transform.position, prevSelected.gameObject);
-
-                    if(hasMatch())
-                    {
-                        // clear matches
-                    }
-                    else
-                    {
-                        SwapObject(transform.position, tempSelf, prevSelected.gameObject);
-                    }
-
-                    GridManagerScript.instance.isMoving = false;
-
                     prevSelected.Deselect();
                }
            }
-    }
-    IEnumerator Wait()
-    {
-        yield return new WaitForSeconds(1);
     }
 
     // swap selected tiles
     void SwapObject(Vector3 currentPos, Vector3 targetPos, GameObject prev)
     {
+        GridManagerScript.instance.isMoving = true;
+
         Sprite prevSprite = prev.GetComponent<SpriteRenderer>().sprite;
         Sprite selfSprite = GetComponent<SpriteRenderer>().sprite;
        
@@ -80,6 +63,8 @@ public class TileScript : MonoBehaviour {
         {
             StartCoroutine(SmoothSwap(currentPos, targetPos, prev));
         }
+
+        GridManagerScript.instance.isMoving = false;
     }
 
     // visual smoothing swaping
@@ -88,17 +73,35 @@ public class TileScript : MonoBehaviour {
         for (float t = 0f; t <= 1; t += 0.1f)
         {
             float lerpAmount = Mathf.SmoothStep(0,1,t);
-            prev.transform.position = Vector3.Lerp(prev.transform.position, currentPos,lerpAmount);
-            transform.position = Vector3.Lerp(transform.position,targetPos,lerpAmount);
+            prev.transform.position = Vector3.Lerp(targetPos, currentPos,lerpAmount);
+            transform.position = Vector3.Lerp(currentPos,targetPos,lerpAmount);
             yield return null;
         }
 
         prev.transform.position = currentPos;
         transform.position = targetPos;
+
+        if (hasMatch())
+        {
+            // clear matches
+        }
+        else
+        {
+            for (float t = 0f; t <= 1; t += 0.1f)
+            {
+                float lerpAmount = Mathf.SmoothStep(0, 1, t);
+                prev.transform.position = Vector3.Lerp(currentPos, targetPos, lerpAmount);
+                transform.position = Vector3.Lerp(targetPos, currentPos, lerpAmount);
+                yield return null;
+            }
+
+            prev.transform.position = currentPos;
+            transform.position = targetPos;
+        }
     }
 
     private bool hasMatch()
     {
-        return false;
+        return true;
     }
 }
