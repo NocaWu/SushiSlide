@@ -80,6 +80,9 @@ public class TileScript : MonoBehaviour {
 
         prev.transform.position = currentPos;
         transform.position = targetPos;
+        GridManagerScript.instance.tile[Mathf.RoundToInt(targetPos.x)+2, Mathf.RoundToInt(targetPos.y)+2] = gameObject;
+        GridManagerScript.instance.tile[Mathf.RoundToInt(currentPos.x)+2, Mathf.RoundToInt(currentPos.y)+2] = prev;
+
 
         if (hasMatch())
         {
@@ -95,13 +98,15 @@ public class TileScript : MonoBehaviour {
                 yield return null;
             }
 
-            prev.transform.position = currentPos;
-            transform.position = targetPos;
+            prev.transform.position = targetPos;
+            transform.position = currentPos;
+            GridManagerScript.instance.tile[Mathf.RoundToInt(targetPos.x)+2, Mathf.RoundToInt(targetPos.y)+2] = prev;
+            GridManagerScript.instance.tile[Mathf.RoundToInt(currentPos.x)+2, Mathf.RoundToInt(currentPos.y)+2] = gameObject;
         }
     }
 
     private bool hasMatch()
     {
-        return true;
+        return false;
     }
 }
