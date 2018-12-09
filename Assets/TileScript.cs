@@ -8,13 +8,27 @@ public class TileScript : MonoBehaviour {
     private SpriteRenderer rend;
     private bool isSelected;
     private Color selectedColor = new Vector4(1f,1f,1f,0.5f);
+    private bool hasMatch = false;
 
 	void Start()
 	{
         rend = GetComponent<SpriteRenderer>();
 	}
-	
-    private void Select()
+
+	void Update()
+	{
+        //if(!hasBelow())
+        //{
+        //    transform.position -= new Vector3(0, 1, 0);
+        //    GridManagerScript.instance.tile[Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y)] = gameObject;
+        //} 
+        //else if (Match().Count > 1)
+        //{
+        //    ClearMatch();
+        //}
+	}
+
+	private void Select()
 	{
         isSelected = true;
         rend.color = selectedColor;
@@ -48,7 +62,7 @@ public class TileScript : MonoBehaviour {
            }
     }
 
-    // swap selected tiles
+    // swap selected tiles if they're nect to each other
     void SwapObject(Vector3 currentPos, Vector3 targetPos, GameObject prev)
     {
         GridManagerScript.instance.isMoving = true;
@@ -68,6 +82,7 @@ public class TileScript : MonoBehaviour {
     }
 
     // visual smoothing swaping
+    // after the swap check if there any match, if not, swap it back
     IEnumerator SmoothSwap(Vector3 currentPos, Vector3 targetPos, GameObject prev)
     {
         for (float t = 0f; t <= 1; t += 0.1f)
@@ -80,15 +95,12 @@ public class TileScript : MonoBehaviour {
 
         prev.transform.position = currentPos;
         transform.position = targetPos;
-        GridManagerScript.instance.tile[Mathf.RoundToInt(targetPos.x)+2, Mathf.RoundToInt(targetPos.y)+2] = gameObject;
-        GridManagerScript.instance.tile[Mathf.RoundToInt(currentPos.x)+2, Mathf.RoundToInt(currentPos.y)+2] = prev;
 
+        // tell GridMangager its swap
+        GridManagerScript.instance.tile[Mathf.RoundToInt(targetPos.x), Mathf.RoundToInt(targetPos.y)] = gameObject;
+        GridManagerScript.instance.tile[Mathf.RoundToInt(currentPos.x), Mathf.RoundToInt(currentPos.y)] = prev;
 
-        if (hasMatch())
-        {
-            // clear matches
-        }
-        else
+        if (Match().Count <= 1)
         {
             for (float t = 0f; t <= 1; t += 0.1f)
             {
@@ -100,13 +112,85 @@ public class TileScript : MonoBehaviour {
 
             prev.transform.position = targetPos;
             transform.position = currentPos;
-            GridManagerScript.instance.tile[Mathf.RoundToInt(targetPos.x)+2, Mathf.RoundToInt(targetPos.y)+2] = prev;
-            GridManagerScript.instance.tile[Mathf.RoundToInt(currentPos.x)+2, Mathf.RoundToInt(currentPos.y)+2] = gameObject;
+
+            // tell GridMangager its swap
+            GridManagerScript.instance.tile[Mathf.RoundToInt(targetPos.x), Mathf.RoundToInt(targetPos.y)] = prev;
+            GridManagerScript.instance.tile[Mathf.RoundToInt(currentPos.x), Mathf.RoundToInt(currentPos.y)] = gameObject;
+        }
+        //else 
+        //{
+        //    ClearMatch();
+        //}
+    }
+
+    private bool hasBelow()
+    {
+        GameObject below = null;
+
+        if (Mathf.RoundToInt(transform.position.y) - 1 >= 0)
+        {
+            below = GridManagerScript.instance.tile[Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y) - 1];
+        }
+
+        if (below == null && Mathf.RoundToInt(transform.position.y) > 0)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
         }
     }
 
-    private bool hasMatch()
+    private List<GameObject> Match()
     {
-        return false;
+        List<GameObject> MatchTiles = new List<GameObject>();
+        List<GameObject> AdjuctTiles = new List<GameObject>();
+
+        if (hasBelow() && Mathf.RoundToInt(transform.position.y) - 1 >= 0)
+        {
+            GameObject below = GridManagerScript.instance.tile[Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y) - 1];
+            AdjuctTiles.Add(below);
+        }
+
+        if(Mathf.RoundToInt(transform.position.y) + 1 <= 4)
+        {
+            GameObject above = GridManagerScript.instance.tile[Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y) + 1];
+            AdjuctTiles.Add(above);
+        }
+
+        if(Mathf.RoundToInt(transform.position.x) + 1 <= 4)
+        {
+            GameObject toRight = GridManagerScript.instance.tile[Mathf.RoundToInt(transform.position.x) + 1, Mathf.RoundToInt(transform.position.y)];
+            AdjuctTiles.Add(toRight);
+        }
+
+        if(Mathf.RoundToInt(transform.position.x) - 1 >= 0)
+        {
+            GameObject toLeft = GridManagerScript.instance.tile[Mathf.RoundToInt(transform.position.x) - 1, Mathf.RoundToInt(transform.position.y)];
+            AdjuctTiles.Add(toLeft);
+        }
+
+        for (int i = 0; i < AdjuctTiles.Count; i++)
+        {
+            if(AdjuctTiles[i].GetComponent<SpriteRenderer>().sprite == rend.sprite)
+            {
+                MatchTiles.Add(AdjuctTiles[i]);
+            }
+        }
+        return MatchTiles;
+    }
+
+    private void ClearMatch()
+    {
+        // clear matches
+        // move down
+        // instantiate new tiles if empty
+        //hasMatch = false;
+        for (int i = 0; i < Match().Count; i++)
+        {
+            Destroy(Match()[i]);
+        }
+        Destroy(gameObject);
     }
 }
