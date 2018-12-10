@@ -37,7 +37,14 @@ public class GridManagerVer2 : MonoBehaviour {
                 {
                     tile[x, y] = Instantiate(tilePrefab, new Vector3(x, y, 0), Quaternion.identity);
                     tile[x, y].transform.parent = gameObject.transform;
-                    tile[x, y].GetComponent<SpriteRenderer>().sprite = tileSprite[Random.Range(0, tileSprite.Length)];
+                    List<Sprite> avaliableSprites = new List<Sprite>();
+                    avaliableSprites.AddRange(tileSprite);
+                    if(x > 0 && y > 0)
+                    {
+                        avaliableSprites.Remove(tile[x - 1, y].GetComponent<SpriteRenderer>().sprite);
+                        avaliableSprites.Remove(tile[x, y - 1].GetComponent<SpriteRenderer>().sprite);
+                    }
+                    tile[x, y].GetComponent<SpriteRenderer>().sprite = avaliableSprites[Random.Range(0, avaliableSprites.Count-1)];
                 }
             }
         } 
