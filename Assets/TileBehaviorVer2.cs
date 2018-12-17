@@ -7,23 +7,30 @@ public class TileBehaviorVer2 : MonoBehaviour
     public bool inMatch = false;
 
     private static TileBehaviorVer2 prevSelected = null;
-    private SpriteRenderer rend;
+    public SpriteRenderer rend;
     private bool isSelected;
     private Color selectedColor = new Vector4(1, 1, 1, 0.5f);
 
     // Use this for initialization
-    void Start()
+    void Awake()
     {
         rend = GetComponent<SpriteRenderer>();
+        MarkMatchTiles();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        FindMatchTiles();
-    }
+	void Update()
+	{
+         //bug seems related to "FindMatchTiles"
+         //where is the right time to put it...
+        //if(!GridManagerVer2.instance.isShifting)
+        //{
+        //    GridManagerVer2.instance.isShifting = true;
+        //    MarkMatchTiles();
+        //    GridManagerVer2.instance.isShifting = false;
+        //}
+	}
 
-    void OnMouseDown()
+	void OnMouseDown()
     {
         if (rend.sprite && !GridManagerVer2.instance.isShifting)
         {
@@ -37,8 +44,11 @@ public class TileBehaviorVer2 : MonoBehaviour
             }
             else
             {
+                GridManagerVer2.instance.isShifting = true;
                 SwapObject(transform.position, prevSelected.gameObject.transform.position, prevSelected.gameObject);
                 prevSelected.Deselect();
+                //GridManagerVer2.instance.ResolveBoard();
+                GridManagerVer2.instance.isShifting = false;
             }
         }
     }
@@ -60,8 +70,6 @@ public class TileBehaviorVer2 : MonoBehaviour
     // swap selected tiles if they're nect to each other
     void SwapObject(Vector3 currentPos, Vector3 targetPos, GameObject prev)
     {
-        GridManagerVer2.instance.isShifting = true;
-
         Sprite prevSprite = prev.GetComponent<SpriteRenderer>().sprite;
         Sprite selfSprite = GetComponent<SpriteRenderer>().sprite;
 
@@ -72,8 +80,6 @@ public class TileBehaviorVer2 : MonoBehaviour
         {
             StartCoroutine(SmoothSwap(currentPos, targetPos, prev));
         }
-
-        GridManagerVer2.instance.isShifting = false;
     }
 
     // visual smoothing swaping
@@ -87,16 +93,17 @@ public class TileBehaviorVer2 : MonoBehaviour
             transform.position = Vector3.Lerp(currentPos, targetPos, lerpAmount);
             yield return null;
         }
-
         prev.transform.position = currentPos;
         transform.position = targetPos;
 
         // tell GridMangager its swap
-        GridManagerVer2.instance.tile[Mathf.RoundToInt(targetPos.x), Mathf.RoundToInt(targetPos.y)] = gameObject;
-        GridManagerVer2.instance.tile[Mathf.RoundToInt(currentPos.x), Mathf.RoundToInt(currentPos.y)] = prev;
+        GridManagerVer2.instance.tile[Mathf.RoundToInt(targetPos.x), Mathf.RoundToInt(targetPos.y)] = this;
+        GridManagerVer2.instance.tile[Mathf.RoundToInt(currentPos.x), Mathf.RoundToInt(currentPos.y)] = prev.GetComponent<TileBehaviorVer2>();
 
-        FindMatchTiles();
-        if (inMatch == false)
+        MarkMatchTiles();
+        prev.GetComponent<TileBehaviorVer2>().MarkMatchTiles();
+
+        if(!inMatch && !prev.GetComponent<TileBehaviorVer2>().inMatch)
         {
             for (float t = 0f; t <= 1; t += 0.1f)
             {
@@ -110,50 +117,47 @@ public class TileBehaviorVer2 : MonoBehaviour
             transform.position = currentPos;
 
             // tell GridMangager its swap
-            GridManagerVer2.instance.tile[Mathf.RoundToInt(targetPos.x), Mathf.RoundToInt(targetPos.y)] = prev;
-            GridManagerVer2.instance.tile[Mathf.RoundToInt(currentPos.x), Mathf.RoundToInt(currentPos.y)] = gameObject;
+            GridManagerVer2.instance.tile[Mathf.RoundToInt(targetPos.x), Mathf.RoundToInt(targetPos.y)] = prev.GetComponent<TileBehaviorVer2>();
+            GridManagerVer2.instance.tile[Mathf.RoundToInt(currentPos.x), Mathf.RoundToInt(currentPos.y)] = this;
         }
     }
 
-    // check the surroundings and put the match tiles in a list
-    // change all match tile's inMatch bool to true
-    void FindMatchTiles()
+    void MarkMatchTiles()
     {
-        List<GameObject> matchTiles = new List<GameObject>();
-        List<GameObject> neighbourTiles = new List<GameObject>();
+        List<TileBehaviorVer2> neighbourTiles = new List<TileBehaviorVer2>();
 
         int xPos = Mathf.RoundToInt(transform.position.x);
         int yPos = Mathf.RoundToInt(transform.position.y);
 
         if (yPos <= 3)
         {
-            GameObject tileAbove = GridManagerVer2.instance.tile[xPos, yPos + 1];
+            TileBehaviorVer2 tileAbove = GridManagerVer2.instance.tile[xPos, yPos + 1];
             neighbourTiles.Add(tileAbove);
         }
         if (yPos >= 1)
         {
-            GameObject tileBelow = GridManagerVer2.instance.tile[xPos, yPos - 1];
+            TileBehaviorVer2 tileBelow = GridManagerVer2.instance.tile[xPos, yPos - 1];
             neighbourTiles.Add(tileBelow);
         }
         if (xPos <= 3)
         {
-            GameObject tileToright = GridManagerVer2.instance.tile[xPos + 1, yPos];
+            TileBehaviorVer2 tileToright = GridManagerVer2.instance.tile[xPos + 1, yPos];
             neighbourTiles.Add(tileToright);
         }
         if (xPos >= 1)
         {
-            GameObject tileToleft = GridManagerVer2.instance.tile[xPos - 1, yPos];
+            TileBehaviorVer2 tileToleft = GridManagerVer2.instance.tile[xPos - 1, yPos];
             neighbourTiles.Add(tileToleft);
         }
 
+        List<TileBehaviorVer2> matchTiles = new List<TileBehaviorVer2>();
+
+        // how to use while loop to search all matched neighbours?
         for (int i = 0; i < neighbourTiles.Count; i++)
         {
-            if (neighbourTiles[i])
+            if (neighbourTiles[i].rend.sprite == rend.sprite)
             {
-                if (neighbourTiles[i].GetComponent<SpriteRenderer>().sprite == gameObject.GetComponent<SpriteRenderer>().sprite)
-                {
-                    matchTiles.Add(neighbourTiles[i]);
-                }
+                matchTiles.Add(neighbourTiles[i]);
             }
         }
 
@@ -162,7 +166,7 @@ public class TileBehaviorVer2 : MonoBehaviour
             inMatch = true;
             for (int i = 0; i < matchTiles.Count; i++)
             {
-                matchTiles[i].GetComponent<TileBehaviorVer2>().inMatch = true;
+                matchTiles[i].inMatch = true;
             }
         }
     }

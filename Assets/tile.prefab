@@ -20,8 +20,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4309752297405358}
   - component: {fileID: 212065194502095326}
-  - component: {fileID: 114390158078742616}
   - component: {fileID: 58472742321167578}
+  - component: {fileID: 114397448257973162}
   m_Layer: 0
   m_Name: tile
   m_TagString: Untagged
@@ -57,7 +57,7 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.37037036
---- !u!114 &114390158078742616
+--- !u!114 &114397448257973162
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -65,9 +65,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1555702125160946}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60159382ebf37447895b5269fde85c9e, type: 3}
+  m_Script: {fileID: 11500000, guid: 6735747d565d54b0b8b90e7ceb7af78d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  inMatch: 0
+  rend: {fileID: 0}
 --- !u!212 &212065194502095326
 SpriteRenderer:
   m_ObjectHideFlags: 1
