@@ -143,7 +143,7 @@ public class TileBehaviorVer3 : MonoBehaviour {
 
         for (int i = 0; i < neighbourTiles.Count; i++)
         {
-            if (neighbourTiles[i].rend.sprite == rend.sprite)
+            if (neighbourTiles[i] && neighbourTiles[i].rend.sprite == rend.sprite)
             {
                 matchTiles.Add(neighbourTiles[i]);
             }

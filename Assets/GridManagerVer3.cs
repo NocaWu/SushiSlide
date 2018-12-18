@@ -8,6 +8,7 @@ public class GridManagerVer3 : MonoBehaviour {
 
     public GameObject tilePrefab;
     public TileBehaviorVer3[,] tile = new TileBehaviorVer3[5, 5]; // the whole grid(5*5) tiles as an array
+    TileBehaviorVer3[,] toMove = new TileBehaviorVer3[5, 5];
 
     public Sprite[] tileSprite;
 
@@ -20,6 +21,7 @@ public class GridManagerVer3 : MonoBehaviour {
         instance = this;
         FillGrid();
         CheckGrid();
+        ResolveGrid();
     }
 	
 	// Update is called once per frame
@@ -32,17 +34,15 @@ public class GridManagerVer3 : MonoBehaviour {
     {
         if (!isShifting)
         {
+            isShifting = true;
+
             while (hasMatch)
             {
-                isShifting = true;
-
                 ClearMatch();
                 ShiftGrid();
-                FillGrid();
                 CheckGrid();
-
-                isShifting = false;
             }
+            isShifting = false;
         }
     }
 
@@ -52,7 +52,10 @@ public class GridManagerVer3 : MonoBehaviour {
         {
             for (int x = 0; x < 5; x++)
             {
-                tile[x, y].CheckMatch();
+                if(tile[x, y])
+                {
+                    tile[x, y].CheckMatch(); 
+                }
             }
         }
     }
@@ -100,27 +103,39 @@ public class GridManagerVer3 : MonoBehaviour {
         hasMatch = false;
     }
 
+    // add a bool for shift grid
     void ShiftGrid()
     {
-        for (int x = 0; x <5; x++)
+        for (int y = 0; y <4; y++)
         {
-            for (int y = 0; y <4; y++)
+            for (int x = 0; x <5; x++)
             {
-                if (tile[x, y]==null && tile[x, y + 1]!= null)
+                if (tile[x, y]==null)
                 {
-                    //tile[x, y+1].gameObject.transform.position -= new Vector3(0, 1, 0);
-                    StartCoroutine(ShiftTileDown(tile[x, y + 1],
-                                                 tile[x, y + 1].gameObject.transform.position, 
-                                                 tile[x, y + 1].gameObject.transform.position -= new Vector3(0, 1, 0)));
-                    tile[x, y] = tile[x, y + 1].gameObject.GetComponent<TileBehaviorVer3>();
-                    tile[x, y + 1] = null;
+                    for (int n = 1; n < 4; n++)
+                    {
+                        if (y+n <= 4 && tile[x, y + n] != null)
+                        {
+                            toMove[x,y+n] = tile[x, y + n];
+
+                            StartCoroutine(ShiftTileDown(toMove[x, y + n],
+                                                         toMove[x, y + n].transform.position,
+                                                         new Vector3(0, n, 0)));
+                            tile[x, y] = toMove[x, y + n];
+                            tile[x, y + n] = null;
+
+                            break;
+                        }
+                    }
                 }
             }
         }
+        //FillGrid();
     }
 
-    IEnumerator ShiftTileDown(TileBehaviorVer3 toBeMoved, Vector3 currentPos, Vector3 targetPos)
+    IEnumerator ShiftTileDown(TileBehaviorVer3 toBeMoved, Vector3 currentPos, Vector3 moveValue)
     {
+        Vector3 targetPos = currentPos - moveValue;
         for (float t = 0f; t <= 1; t += 0.1f)
         {
             float lerpAmount = Mathf.SmoothStep(0, 1, t);
