@@ -39,9 +39,9 @@ public class GridManagerVer3 : MonoBehaviour {
             while (hasMatch)
             {
                 ClearMatch();
-                ShiftGrid();
-                //StartCoroutine("ShiftGrid"); // too funny
-                CheckGrid();
+                //ShiftGrid(); // some match not deleting
+                StartCoroutine("ShiftGridSmoothy"); // too funny // randomly breaks
+                //CheckGrid();
             }
             isShifting = false;
         }
@@ -104,40 +104,42 @@ public class GridManagerVer3 : MonoBehaviour {
         hasMatch = false;
     }
 
-    //IEnumerator ShiftGrid()
-    //{
-    //    for (int y = 0; y < 4; y++)
-    //    {
-    //        for (int x = 0; x < 5; x++)
-    //        {
-    //            if (tile[x, y] == null)
-    //            {
-    //                for (int n = 1; y + n <= 4; n++)
-    //                {
-    //                    if (tile[x, y + n] != null)
-    //                    {
-    //                        Vector3 currentPos = tile[x, y + n].transform.position;
-    //                        Vector3 targetPos = tile[x, y + n].transform.position - new Vector3(0, n, 0);
-    //                        for (float t = 0f; t <= 1; t += 0.1f)
-    //                        {
-    //                            float lerpAmount = Mathf.SmoothStep(0, 1, t);
-    //                            tile[x, y + n].transform.position = Vector3.Lerp(currentPos, targetPos, lerpAmount);
-    //                            yield return null;
-    //                        }
+    IEnumerator ShiftGridSmoothy()
+    {
+        for (int x = 0; x < 5; x++)
+        {
+            for (int y = 0; y < 4; y++)
+            {
+                if (tile[x, y] == null)
+                {
+                    for (int n = 1; y + n <= 4; n++)
+                    {
+                        if (tile[x, y + n] != null)
+                        {
+                            Vector3 currentPos = tile[x, y + n].transform.position;
+                            Vector3 targetPos = tile[x, y + n].transform.position - new Vector3(0, n, 0);
+                            for (float t = 0f; t <= 1; t += 0.3f)
+                            {
+                                float lerpAmount = Mathf.SmoothStep(0, 1, t);
+                                tile[x, y + n].transform.position = Vector3.Lerp(currentPos, targetPos, lerpAmount);
+                                yield return null;
+                            }
 
-    //                        tile[x, y + n].transform.position = targetPos;
-    //                        tile[x, y] = tile[x, y + n];
-    //                        tile[x, y + n] = null;
+                            tile[x, y + n].transform.position = targetPos;
+                            tile[x, y] = tile[x, y + n];
+                            tile[x, y + n] = null;
 
-    //                        break;
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    }
+                            break;
+                        }
+                    }
+                    //break;
+                }
+            }
+        }
 
-    //    FillGrid();
-    //}
+        FillGrid();
+        CheckGrid();
+    }
 
     // add a bool for shift grid
     void ShiftGrid()
@@ -155,11 +157,7 @@ public class GridManagerVer3 : MonoBehaviour {
                             tile[x, y + n].transform.position -= new Vector3(0, n, 0);
                             tile[x, y] = tile[x, y + n];
                             tile[x, y + n] = null;
-                            //toMove[x,y+n] = tile[x, y + n];
-                            //StartCoroutine(ShiftTileDown(tile[x, y],
-                                                         //toMove[x, y + n],
-                                                         //toMove[x, y + n].transform.position,
-                                                         //new Vector3(0, n, 0)));
+
                             break;
                         }
                     }
@@ -167,20 +165,5 @@ public class GridManagerVer3 : MonoBehaviour {
             }
         }
         FillGrid();
-    }
-
-    IEnumerator ShiftTileDown(TileBehaviorVer3 empty, TileBehaviorVer3 toBeMoved, Vector3 currentPos, Vector3 moveValue)
-    {
-        Vector3 targetPos = currentPos - moveValue;
-        for (float t = 0f; t <= 1; t += 0.1f)
-        {
-            float lerpAmount = Mathf.SmoothStep(0, 1, t);
-            toBeMoved.transform.position = Vector3.Lerp(currentPos, targetPos, lerpAmount);
-            yield return null;
-        }
-
-        toBeMoved.transform.position = targetPos;
-        empty = toBeMoved;
-        toBeMoved = null;
     }
 }
