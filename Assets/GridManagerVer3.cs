@@ -38,10 +38,9 @@ public class GridManagerVer3 : MonoBehaviour {
 
             while (hasMatch)
             {
-                ClearMatch();
+                //ClearMatch();
                 //ShiftGrid(); // some match not deleting
                 StartCoroutine("ShiftGridSmoothy"); // too funny // randomly breaks
-                //CheckGrid();
             }
             isShifting = false;
         }
@@ -106,6 +105,8 @@ public class GridManagerVer3 : MonoBehaviour {
 
     IEnumerator ShiftGridSmoothy()
     {
+        ClearMatch();
+
         for (int x = 0; x < 5; x++)
         {
             for (int y = 0; y < 4; y++)
